@@ -7,9 +7,9 @@ var collection = ee.ImageCollection('COPERNICUS/S5P/OFFL/L3_SO2')
 
 Export.table.toDrive({
   collection: collection,
-  description: 'NO2_Kyiv_2021',
-  selectors: ['system:time_start', 'NO2_column_number_density'],
+  description: 'SO2_Kyiv_2021',
+  selectors: ['system:time_start', 'SO2_column_number_density'],
   folder: 'EE_export',
-  fileNamePrefix: 'NO2_Kyiv_2021',
+  fileNamePrefix: 'SO2_Kyiv_2021',
   fileFormat: 'CSV'
 });
