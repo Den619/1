@@ -1,0 +1,34 @@
+// Вибрати колекцію даних SO2
+var collection = ee.ImageCollection('COPERNICUS/S5P/OFFL/L3_SO2')
+  .select('SO2_column_number_density')
+  .filterBounds(ee.Geometry.Point(30.5246, 50.4501))
+  .filterDate('2019-01-01', '2019-12-31');
+
+// Зберегти дату властивості "system:time_start" в окремий канал та зменшити до зони інтересу
+var collectionWithDate = collection.map(function(image) {
+  return image.addBands(image.metadata('system:time_start'));
+});
+
+var hourlyCollection = ee.ImageCollection([]); // створюємо порожню колекцію
+
+// Цикл, який забезпечує розбиття колекції на годинні значення
+for (var i = 0; i < 24; i++) {
+  var startHour = i;
+  var endHour = i + 1;
+  var filtered = collectionWithDate.filter(ee.Filter.calendarRange(startHour, endHour, 'hour'));
+  var meanImage = filtered.mean().rename('SO2_column_number_density');
+  var dateImage = filtered.first().select('system:time_start').rename('date');
+  var hourlyImage = meanImage.addBands(dateImage).set('hour', startHour);
+  hourlyCollection = hourlyCollection.merge(ee.ImageCollection([hourlyImage]));
+}
+
+// Перетворення колекції зображень у таблицю
+var tabularData = hourlyCollection.toTable().select(['date', 'hour', 'SO2_column_number_density']);
+
+// Експорт у форматі CSV
+Export.table.toDrive({
+  collection: tabularData,
+  description: 'SO2_Kyiv_2019_hourly',
+  fileNamePrefix: 'SO2_Kyiv_2019_hourly',
+  fileFormat: 'CSV'
+});
