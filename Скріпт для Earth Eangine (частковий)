@@ -1,0 +1,15 @@
+var collection = ee.ImageCollection('COPERNICUS/S5P/OFFL/L3_SO2')
+  .select('SO2_column_number_density')
+  .filterBounds(ee.Geometry.Point(30.5246, 50.4501))
+  .filterDate('2021-01-01', '2021-12-31')
+  .reduce(ee.Reducer.mean().combine({reducer2:ee.Reducer.median(),sharedInputs: true}));
+
+
+Export.table.toDrive({
+  collection: collection,
+  description: 'NO2_Kyiv_2021',
+  selectors: ['system:time_start', 'NO2_column_number_density'],
+  folder: 'EE_export',
+  fileNamePrefix: 'NO2_Kyiv_2021',
+  fileFormat: 'CSV'
+});
